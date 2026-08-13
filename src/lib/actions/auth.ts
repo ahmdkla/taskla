@@ -4,9 +4,10 @@ import * as z from "zod";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { Prisma } from "@/generated/prisma/client";
 import { createSession, deleteSession } from "@/lib/session";
 
-const SetupFormSchema = z.object({
+const SignupFormSchema = z.object({
   name: z
     .string()
     .min(2, { error: "Name must be at least 2 characters long." })
@@ -36,16 +37,11 @@ export type AuthFormState =
     }
   | undefined;
 
-export async function setupFirstUser(
+export async function signup(
   _state: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
-  const existingUserCount = await db.user.count();
-  if (existingUserCount > 0) {
-    redirect("/login");
-  }
-
-  const validatedFields = SetupFormSchema.safeParse({
+  const validatedFields = SignupFormSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
@@ -58,12 +54,24 @@ export async function setupFirstUser(
   const { name, email, password } = validatedFields.data;
   const passwordHash = await bcrypt.hash(password, 12);
 
-  const user = await db.user.create({
-    data: { name, email: email.toLowerCase(), passwordHash },
-    select: { id: true },
-  });
+  let userId: string;
+  try {
+    const user = await db.user.create({
+      data: { name, email: email.toLowerCase(), passwordHash },
+      select: { id: true },
+    });
+    userId = user.id;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return { message: "An account with this email already exists." };
+    }
+    throw error;
+  }
 
-  await createSession(user.id);
+  await createSession(userId);
   redirect("/overview");
 }
 

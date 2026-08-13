@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decryptSessionCookie, SESSION_COOKIE_NAME } from "@/lib/session";
 
-const publicRoutes = ["/login", "/setup"];
+const publicRoutes = ["/login", "/signup"];
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;

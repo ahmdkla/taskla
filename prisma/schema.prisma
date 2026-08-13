@@ -16,6 +16,7 @@ model User {
   passwordHash String
   name         String
   avatarUrl    String?
+  tutorialSeen Boolean  @default(false)
   createdAt    DateTime @default(now())
 
   categories     Category[]

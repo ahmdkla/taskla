@@ -25,6 +25,7 @@ export const getCurrentUser = cache(async () => {
       name: true,
       avatarUrl: true,
       createdAt: true,
+      tutorialSeen: true,
     },
   });
 

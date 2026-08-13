@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ import { LoginForm } from "./login-form";
 export default async function LoginPage() {
   const userCount = await db.user.count();
   if (userCount === 0) {
-    redirect("/setup");
+    redirect("/signup");
   }
 
   return (
@@ -23,8 +24,14 @@ export default async function LoginPage() {
         <CardTitle>Welcome back</CardTitle>
         <CardDescription>Sign in to your Taskla workspace.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <LoginForm />
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="text-brand hover:underline">
+            Sign up
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );

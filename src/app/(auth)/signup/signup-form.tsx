@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { setupFirstUser } from "@/lib/actions/auth";
+import { signup } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SetupForm() {
-  const [state, action, pending] = useActionState(setupFirstUser, undefined);
+export function SignupForm() {
+  const [state, action, pending] = useActionState(signup, undefined);
 
   return (
     <form action={action} className="space-y-4" noValidate>

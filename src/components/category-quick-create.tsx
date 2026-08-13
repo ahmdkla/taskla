@@ -106,6 +106,9 @@ export function CategoryQuickCreate({
           >
             {isPending ? "Creating…" : "Create category"}
           </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            Manage all categories from Settings.
+          </p>
         </form>
       </PopoverContent>
     </Popover>

@@ -2,6 +2,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { QuickTaskDialog } from "@/components/quick-task-dialog";
+import { HelpButton } from "@/components/help-button";
 
 export function AppTopbar() {
   return (
@@ -9,6 +10,7 @@ export function AppTopbar() {
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-5" />
       <div className="flex-1" />
+      <HelpButton />
       <QuickTaskDialog />
       <ThemeToggle />
     </header>
