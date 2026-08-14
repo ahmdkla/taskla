@@ -1,5 +1,5 @@
 import { Logo } from "@/components/logo";
-import { ParticleNetworkBackground } from "@/components/particle-network-background";
+import { VantaNetBackground } from "@/components/vanta-net-background";
 
 export default function AuthLayout({
   children,
@@ -8,7 +8,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative isolate flex min-h-dvh flex-col items-center justify-center gap-8 overflow-hidden bg-background px-4 py-12">
-      <ParticleNetworkBackground variant="vivid" />
+      <VantaNetBackground variant="vivid" />
       <Logo />
       <div className="w-full max-w-sm">{children}</div>
     </div>

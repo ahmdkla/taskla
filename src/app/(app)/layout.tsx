@@ -5,7 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { AppTopbar } from "@/components/app-topbar";
 import { TutorialProvider } from "@/components/tutorial-provider";
 import { TutorialCard } from "@/components/tutorial-card";
-import { ParticleNetworkBackground } from "@/components/particle-network-background";
+import { VantaNetBackground } from "@/components/vanta-net-background";
 
 export default async function AppLayout({
   children,
@@ -23,7 +23,7 @@ export default async function AppLayout({
         <TutorialProvider initiallyOpen={!user.tutorialSeen}>
           <AppTopbar />
           <div className="relative isolate flex-1 overflow-hidden p-4 md:p-6">
-            <ParticleNetworkBackground variant="subtle" />
+            <VantaNetBackground variant="subtle" />
             <TutorialCard />
             {children}
           </div>
