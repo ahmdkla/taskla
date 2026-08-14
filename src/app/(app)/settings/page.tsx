@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "./profile-form";
 import { CategoryList } from "./category-list";
 import { ThemeSelector } from "./theme-selector";
+import { SecurityForm } from "./security-form";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,15 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <ProfileForm name={user.name} email={user.email} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Security</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SecurityForm />
           </CardContent>
         </Card>
 

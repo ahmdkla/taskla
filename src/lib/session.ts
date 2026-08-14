@@ -14,9 +14,12 @@ const encodedKey = new TextEncoder().encode(secretKey);
 export type SessionPayload = {
   userId: string;
   expiresAt: string;
+  /** JWT issued-at (seconds). Set by jose; used to invalidate sessions
+   *  issued before a password change. */
+  iat?: number;
 };
 
-async function encrypt(payload: SessionPayload) {
+async function encrypt(payload: Omit<SessionPayload, "iat">) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()

@@ -26,12 +26,22 @@ export default async function LoginPage() {
       </CardHeader>
       <CardContent className="space-y-4">
         <LoginForm />
-        <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-brand hover:underline">
-            Sign up
-          </Link>
-        </p>
+        <div className="space-y-1.5 text-center text-sm text-muted-foreground">
+          <p>
+            <Link
+              href="/forgot-password"
+              className="text-brand hover:underline"
+            >
+              Forgot your password?
+            </Link>
+          </p>
+          <p>
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-brand hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

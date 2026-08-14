@@ -2,11 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decryptSessionCookie, SESSION_COOKIE_NAME } from "@/lib/session";
 
-const publicRoutes = ["/login", "/signup"];
+const publicRoutes = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+];
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const isPublicRoute = publicRoutes.includes(path);
+  // Prefix match, not exact: /reset-password/<token> must stay public.
+  const isPublicRoute = publicRoutes.some(
+    (route) => path === route || path.startsWith(`${route}/`)
+  );
 
   const session = await decryptSessionCookie(
     req.cookies.get(SESSION_COOKIE_NAME)?.value
