@@ -59,9 +59,14 @@ export function QuickTaskDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Quick task"
+            className="max-md:size-8 max-md:px-0"
+          >
             <PlusIcon />
-            Quick task
+            <span className="max-md:sr-only">Quick task</span>
           </Button>
         }
       />

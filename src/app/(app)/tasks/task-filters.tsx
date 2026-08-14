@@ -26,7 +26,13 @@ const PRIORITY_OPTIONS = [
   { value: "urgent", label: "Urgent" },
 ];
 
-export function TaskFilters({ categories }: { categories: CategoryOption[] }) {
+export function TaskFilters({
+  categories,
+  hideStatus = false,
+}: {
+  categories: CategoryOption[];
+  hideStatus?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -91,21 +97,23 @@ export function TaskFilters({ categories }: { categories: CategoryOption[] }) {
         </SelectContent>
       </Select>
 
-      <Select
-        value={searchParams.get("status") ?? "all"}
-        onValueChange={(value) => setParam("status", value ?? "all")}
-      >
-        <SelectTrigger>
-          <SelectValue>{(value: string) => statusLabels[value]}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {!hideStatus && (
+        <Select
+          value={searchParams.get("status") ?? "all"}
+          onValueChange={(value) => setParam("status", value ?? "all")}
+        >
+          <SelectTrigger>
+            <SelectValue>{(value: string) => statusLabels[value]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

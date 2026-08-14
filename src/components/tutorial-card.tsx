@@ -6,7 +6,9 @@ import {
   ListChecksIcon,
   TagIcon,
   TimerIcon,
-  CalendarIcon,
+  SearchIcon,
+  Repeat2Icon,
+  LayoutGridIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,9 +17,24 @@ import { useTutorial } from "@/components/tutorial-provider";
 
 const TIPS = [
   {
+    icon: SearchIcon,
+    title: "Find anything fast",
+    body: "Press Ctrl+K (⌘K on Mac) to search across your tasks, projects, and notes.",
+  },
+  {
     icon: ListChecksIcon,
     title: "Capture tasks fast",
     body: "Use Quick task in the top bar to add a task from anywhere in the app.",
+  },
+  {
+    icon: Repeat2Icon,
+    title: "Repeat what recurs",
+    body: "Set a task to repeat daily, weekly, or monthly — the next one appears when you check it off.",
+  },
+  {
+    icon: LayoutGridIcon,
+    title: "Table or board",
+    body: "Switch the Tasks page to board view to drag tasks between To do, In progress, In review, and Done.",
   },
   {
     icon: TagIcon,
@@ -28,11 +45,6 @@ const TIPS = [
     icon: TimerIcon,
     title: "Track focus time",
     body: "Run a timer on the Focus page, optionally tied to a task.",
-  },
-  {
-    icon: CalendarIcon,
-    title: "See your month",
-    body: "The Schedule page shows every task laid out by its due date.",
   },
 ];
 

@@ -49,13 +49,25 @@ export default async function OverviewPage() {
     }),
   ]);
 
-  const [todayTasks, upcomingTasks, monthTasks, todayLog] = await Promise.all([
+  const [todayTasks, overdueList, upcomingTasks, monthTasks, todayLog] =
+    await Promise.all([
     db.task.findMany({
       where: {
         userId: user.id,
+        status: { not: "done" },
         dueDate: { gte: today, lt: tomorrow },
       },
       orderBy: { priority: "desc" },
+      select: { id: true, title: true, status: true, priority: true, dueDate: true },
+    }),
+    db.task.findMany({
+      where: {
+        userId: user.id,
+        status: { not: "done" },
+        dueDate: { lt: today },
+      },
+      orderBy: { dueDate: "asc" },
+      take: 5,
       select: { id: true, title: true, status: true, priority: true, dueDate: true },
     }),
     db.task.findMany({
@@ -153,17 +165,42 @@ export default async function OverviewPage() {
           <CardContent className="py-4">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-medium">Today&apos;s tasks</h2>
-              <span className="text-xs text-muted-foreground">{todayTasks.length}</span>
+              <span className="text-xs text-muted-foreground">
+                {todayTasks.length + overdueList.length}
+              </span>
             </div>
-            {todayTasks.length === 0 ? (
+            {todayTasks.length === 0 && overdueList.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Nothing due today.
               </p>
             ) : (
-              <div className="divide-y divide-border">
-                {todayTasks.map((task) => (
-                  <TaskChecklistItem key={task.id} task={task} />
-                ))}
+              <div className="space-y-3">
+                {overdueList.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs font-medium text-destructive">
+                      Overdue ({overdueList.length})
+                    </p>
+                    <div className="divide-y divide-border">
+                      {overdueList.map((task) => (
+                        <TaskChecklistItem key={task.id} task={task} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {todayTasks.length > 0 && (
+                  <div>
+                    {overdueList.length > 0 && (
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        Due today ({todayTasks.length})
+                      </p>
+                    )}
+                    <div className="divide-y divide-border">
+                      {todayTasks.map((task) => (
+                        <TaskChecklistItem key={task.id} task={task} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

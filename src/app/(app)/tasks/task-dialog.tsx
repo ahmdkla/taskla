@@ -31,6 +31,7 @@ import { SubtaskManager } from "./subtask-manager";
 
 type TaskStatusValue = "todo" | "in_progress" | "in_review" | "done";
 type TaskPriorityValue = "low" | "medium" | "high" | "urgent";
+type RecurrenceValue = "none" | "daily" | "weekly" | "monthly";
 
 type TaskRecord = {
   id: string;
@@ -40,6 +41,7 @@ type TaskRecord = {
   categoryId: string | null;
   status: TaskStatusValue;
   priority: TaskPriorityValue;
+  recurrence: "daily" | "weekly" | "monthly" | null;
   dueDate: Date | null;
   subtasks: { id: string; title: string; completed: boolean }[];
 };
@@ -56,6 +58,13 @@ const PRIORITY_OPTIONS: { value: TaskPriorityValue; label: string }[] = [
   { value: "medium", label: "Medium" },
   { value: "high", label: "High" },
   { value: "urgent", label: "Urgent" },
+];
+
+const RECURRENCE_OPTIONS: { value: RecurrenceValue; label: string }[] = [
+  { value: "none", label: "Does not repeat" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
 ];
 
 export function TaskDialog({
@@ -97,6 +106,9 @@ export function TaskDialog({
   const [dueDate, setDueDate] = useState<Date | undefined>(
     task?.dueDate ?? undefined
   );
+  const [recurrence, setRecurrence] = useState<RecurrenceValue>(
+    task?.recurrence ?? "none"
+  );
 
   const prevPending = useRef(false);
   useEffect(() => {
@@ -115,6 +127,7 @@ export function TaskDialog({
       setStatus(task?.status ?? "todo");
       setPriority(task?.priority ?? "medium");
       setDueDate(task?.dueDate ?? undefined);
+      setRecurrence(task?.recurrence ?? "none");
     }
     prevOpen.current = open;
     // Only reset fields on the closed -> open transition, not on every
@@ -237,14 +250,51 @@ export function TaskDialog({
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Category</Label>
-            <CategorySelect
-              categories={categories}
-              value={categoryId}
-              onValueChange={setCategoryId}
-            />
-            <input type="hidden" name="categoryId" value={categoryId} />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <CategorySelect
+                categories={categories}
+                value={categoryId}
+                onValueChange={setCategoryId}
+              />
+              <input type="hidden" name="categoryId" value={categoryId} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Repeat</Label>
+              <Select
+                value={recurrence}
+                onValueChange={(value) =>
+                  setRecurrence((value ?? "none") as RecurrenceValue)
+                }
+                disabled={status === "done"}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {(v: RecurrenceValue) =>
+                      RECURRENCE_OPTIONS.find((o) => o.value === v)?.label
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {RECURRENCE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input type="hidden" name="recurrence" value={recurrence} />
+              {status === "done" ? (
+                <p className="text-xs text-muted-foreground">
+                  Done tasks don&apos;t repeat.
+                </p>
+              ) : recurrence !== "none" ? (
+                <p className="text-xs text-muted-foreground">
+                  Next one is created when you complete it.
+                </p>
+              ) : null}
+            </div>
           </div>
 
           {state?.message && (

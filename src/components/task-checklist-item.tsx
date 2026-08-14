@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { format, isPast, isToday } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toggleTaskDone } from "@/lib/actions/tasks";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,8 @@ export function TaskChecklistItem({ task }: { task: ChecklistTask }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const done = task.status === "done";
+  const overdue =
+    task.dueDate && !done && isPast(task.dueDate) && !isToday(task.dueDate);
 
   return (
     <div className={cn("flex items-center gap-2.5 py-1.5", isPending && "opacity-60")}>
@@ -55,7 +57,12 @@ export function TaskChecklistItem({ task }: { task: ChecklistTask }) {
         {task.title}
       </span>
       {task.dueDate && (
-        <span className="shrink-0 text-xs text-muted-foreground">
+        <span
+          className={cn(
+            "shrink-0 text-xs",
+            overdue ? "font-medium text-destructive" : "text-muted-foreground"
+          )}
+        >
           {format(task.dueDate, "MMM d")}
         </span>
       )}

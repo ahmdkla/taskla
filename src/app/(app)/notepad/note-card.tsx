@@ -1,12 +1,15 @@
 "use client";
 
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { PencilIcon, TrashIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { NoteDialog } from "./note-dialog";
-import { deleteNote } from "@/lib/actions/notes";
+import { deleteNote, restoreNote } from "@/lib/actions/notes";
+import { cn } from "@/lib/utils";
 
 type NoteRecord = {
   id: string;
@@ -16,8 +19,32 @@ type NoteRecord = {
 };
 
 export function NoteCard({ note }: { note: NoteRecord }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  function handleDelete() {
+    startTransition(async () => {
+      const payload = await deleteNote(note.id);
+      router.refresh();
+      if (payload) {
+        toast("Note deleted", {
+          description: note.title,
+          action: {
+            label: "Undo",
+            onClick: () => {
+              startTransition(async () => {
+                await restoreNote(payload);
+                router.refresh();
+              });
+            },
+          },
+        });
+      }
+    });
+  }
+
   return (
-    <Card>
+    <Card className={cn(isPending && "opacity-60")}>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
         <div className="min-w-0 space-y-1">
           <p className="truncate font-medium">{note.title}</p>
@@ -38,20 +65,14 @@ export function NoteCard({ note }: { note: NoteRecord }) {
               </Button>
             }
           />
-          <DeleteConfirmDialog
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Delete ${note.title}`}
-              >
-                <TrashIcon />
-              </Button>
-            }
-            title="Delete this note?"
-            description={`"${note.title}" will be permanently deleted.`}
-            onConfirm={() => deleteNote(note.id)}
-          />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Delete ${note.title}`}
+            onClick={handleDelete}
+          >
+            <TrashIcon />
+          </Button>
         </div>
       </CardHeader>
       <CardContent>

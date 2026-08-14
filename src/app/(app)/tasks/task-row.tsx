@@ -3,14 +3,19 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format, isPast, isToday } from "date-fns";
-import { PencilIcon, TrashIcon } from "lucide-react";
+import { PencilIcon, Repeat2Icon, TrashIcon } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { PriorityBadge, CategoryBadge } from "@/components/badges";
-import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { TaskDialog } from "./task-dialog";
-import { deleteTask, toggleTaskDone } from "@/lib/actions/tasks";
+import {
+  deleteTask,
+  restoreTask,
+  toggleTaskDone,
+  undoComplete,
+} from "@/lib/actions/tasks";
 import { cn } from "@/lib/utils";
 import type { CategoryOption } from "@/components/category-select";
 import type { ProjectOption } from "@/components/project-select";
@@ -28,6 +33,7 @@ export type TaskRowData = {
   category: { id: string; name: string; color: string } | null;
   status: TaskStatusValue;
   priority: TaskPriorityValue;
+  recurrence: "daily" | "weekly" | "monthly" | null;
   dueDate: Date | null;
   subtasks: { id: string; title: string; completed: boolean }[];
 };
@@ -36,39 +42,108 @@ export function TaskRow({
   task,
   categories,
   projects,
+  autoOpenEdit = false,
+  selectionMode = false,
+  selected = false,
+  onToggleSelected,
 }: {
   task: TaskRowData;
   categories: CategoryOption[];
   projects: ProjectOption[];
+  autoOpenEdit?: boolean;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelected?: () => void;
 }) {
   const router = useRouter();
-  const [editOpen, setEditOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(autoOpenEdit);
   const [isPending, startTransition] = useTransition();
+
+  function handleEditOpenChange(open: boolean) {
+    setEditOpen(open);
+    if (!open && autoOpenEdit) {
+      // Strip the ?edit= deep-link param so a refresh doesn't reopen it.
+      router.replace("/tasks");
+    }
+  }
 
   const done = task.status === "done";
   const overdue =
     task.dueDate && !done && isPast(task.dueDate) && !isToday(task.dueDate);
   const subtaskDone = task.subtasks.filter((s) => s.completed).length;
 
-  return (
-    <>
-      <TableRow className={cn(isPending && "opacity-60")}>
-        <TableCell className="w-10">
-          <Checkbox
-            checked={done}
-            aria-label={done ? "Mark as not done" : "Mark as done"}
-            onCheckedChange={() => {
+  function handleDelete() {
+    startTransition(async () => {
+      const payload = await deleteTask(task.id);
+      router.refresh();
+      if (payload) {
+        toast("Task deleted", {
+          description: task.title,
+          action: {
+            label: "Undo",
+            onClick: () => {
               startTransition(async () => {
-                await toggleTaskDone(task.id);
+                await restoreTask(payload);
                 router.refresh();
               });
-            }}
-          />
+            },
+          },
+        });
+      }
+    });
+  }
+
+  return (
+    <>
+      <TableRow
+        className={cn(isPending && "opacity-60", selected && "bg-muted/60")}
+      >
+        <TableCell className="w-10">
+          {selectionMode ? (
+            <Checkbox
+              checked={selected}
+              aria-label={`Select ${task.title}`}
+              onCheckedChange={() => onToggleSelected?.()}
+            />
+          ) : (
+            <Checkbox
+              checked={done}
+              aria-label={done ? "Mark as not done" : "Mark as done"}
+              onCheckedChange={() => {
+                startTransition(async () => {
+                  const result = await toggleTaskDone(task.id);
+                  router.refresh();
+                  if (result?.completed && result.spawnedTaskId) {
+                    toast.success("Task completed", {
+                      description: result.nextDueDate
+                        ? `Repeats — next one due ${format(result.nextDueDate, "MMM d")}.`
+                        : "Repeats — next one created.",
+                      action: {
+                        label: "Undo",
+                        onClick: () => {
+                          startTransition(async () => {
+                            await undoComplete(
+                              task.id,
+                              result.priorStatus,
+                              result.spawnedTaskId
+                            );
+                            router.refresh();
+                          });
+                        },
+                      },
+                    });
+                  }
+                });
+              }}
+            />
+          )}
         </TableCell>
         <TableCell>
           <button
             type="button"
-            onClick={() => setEditOpen(true)}
+            onClick={() =>
+              selectionMode ? onToggleSelected?.() : setEditOpen(true)
+            }
             className="text-left"
           >
             <span
@@ -79,6 +154,12 @@ export function TaskRow({
             >
               {task.title}
             </span>
+            {task.recurrence && (
+              <Repeat2Icon
+                className="ml-1.5 inline size-3.5 text-muted-foreground"
+                aria-label={`Repeats ${task.recurrence}`}
+              />
+            )}
             {task.subtasks.length > 0 && (
               <span className="ml-2 text-xs text-muted-foreground">
                 {subtaskDone}/{task.subtasks.length}
@@ -110,30 +191,26 @@ export function TaskRow({
           )}
         </TableCell>
         <TableCell className="w-20">
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Edit ${task.title}`}
-              onClick={() => setEditOpen(true)}
-            >
-              <PencilIcon />
-            </Button>
-            <DeleteConfirmDialog
-              trigger={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Delete ${task.title}`}
-                >
-                  <TrashIcon />
-                </Button>
-              }
-              title="Delete this task?"
-              description={`"${task.title}" will be permanently deleted.`}
-              onConfirm={() => deleteTask(task.id)}
-            />
-          </div>
+          {!selectionMode && (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Edit ${task.title}`}
+                onClick={() => setEditOpen(true)}
+              >
+                <PencilIcon />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Delete ${task.title}`}
+                onClick={handleDelete}
+              >
+                <TrashIcon />
+              </Button>
+            </div>
+          )}
         </TableCell>
       </TableRow>
       <TaskDialog
@@ -141,7 +218,7 @@ export function TaskRow({
         projects={projects}
         task={task}
         open={editOpen}
-        onOpenChange={setEditOpen}
+        onOpenChange={handleEditOpenChange}
       />
     </>
   );
