@@ -4,13 +4,35 @@ import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 
 const BRAND_HEX = { light: "37, 99, 235", dark: "59, 130, 246" }; // --brand as r,g,b
-const PARTICLE_COUNT = 46;
-const LINK_DISTANCE = 130;
-const SPEED = 0.18;
+
+const PRESETS = {
+  // Login / signup: meant to be noticed.
+  vivid: {
+    count: 55,
+    linkDistance: 140,
+    speed: 0.55,
+    lineAlpha: 0.32,
+    dotAlpha: 0.6,
+    dotRadius: 1.8,
+  },
+  // Inside the app: ambient texture, must stay out of the way of real work.
+  subtle: {
+    count: 32,
+    linkDistance: 120,
+    speed: 0.22,
+    lineAlpha: 0.08,
+    dotAlpha: 0.2,
+    dotRadius: 1.4,
+  },
+} as const;
 
 type Particle = { x: number; y: number; vx: number; vy: number };
 
-export function ParticleNetworkBackground() {
+export function ParticleNetworkBackground({
+  variant = "vivid",
+}: {
+  variant?: keyof typeof PRESETS;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { resolvedTheme } = useTheme();
 
@@ -18,6 +40,7 @@ export function ParticleNetworkBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const preset = PRESETS[variant];
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -47,12 +70,15 @@ export function ParticleNetworkBackground() {
     }
 
     function seed() {
-      particles = Array.from({ length: PARTICLE_COUNT }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * SPEED,
-        vy: (Math.random() - 0.5) * SPEED,
-      }));
+      particles = Array.from({ length: preset.count }, () => {
+        const angle = Math.random() * Math.PI * 2;
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: Math.cos(angle) * preset.speed,
+          vy: Math.sin(angle) * preset.speed,
+        };
+      });
     }
 
     function drawFrame() {
@@ -77,8 +103,8 @@ export function ParticleNetworkBackground() {
           const dx = a.x - b.x;
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < LINK_DISTANCE) {
-            const alpha = (1 - dist / LINK_DISTANCE) * 0.18;
+          if (dist < preset.linkDistance) {
+            const alpha = (1 - dist / preset.linkDistance) * preset.lineAlpha;
             ctx.strokeStyle = `rgba(${rgb}, ${alpha})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -90,9 +116,9 @@ export function ParticleNetworkBackground() {
       }
 
       for (const p of particles) {
-        ctx.fillStyle = `rgba(${rgb}, 0.35)`;
+        ctx.fillStyle = `rgba(${rgb}, ${preset.dotAlpha})`;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, preset.dotRadius, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -126,7 +152,7 @@ export function ParticleNetworkBackground() {
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [resolvedTheme]);
+  }, [resolvedTheme, variant]);
 
   return (
     <canvas

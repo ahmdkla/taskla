@@ -6,7 +6,7 @@ import { HelpButton } from "@/components/help-button";
 
 export function AppTopbar() {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
+    <header className="relative z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-4">
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-5" />
       <div className="flex-1" />
