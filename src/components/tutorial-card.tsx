@@ -9,6 +9,7 @@ import {
   SearchIcon,
   Repeat2Icon,
   LayoutGridIcon,
+  FlameIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,11 @@ const TIPS = [
     icon: ListChecksIcon,
     title: "Capture tasks fast",
     body: "Use Quick task in the top bar to add a task from anywhere in the app.",
+  },
+  {
+    icon: FlameIcon,
+    title: "Build habits",
+    body: "Track something daily on Habits. Hit 14, 21, and 40 completions for three checkpoints — with 3 freezes per stage for the days life gets in the way.",
   },
   {
     icon: Repeat2Icon,

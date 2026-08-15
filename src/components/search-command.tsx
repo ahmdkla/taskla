@@ -78,7 +78,8 @@ export function SearchCommand() {
     results !== null &&
     (results.tasks.length > 0 ||
       results.projects.length > 0 ||
-      results.notes.length > 0);
+      results.notes.length > 0 ||
+      results.habits.length > 0);
 
   return (
     <>
@@ -157,6 +158,23 @@ export function SearchCommand() {
                       >
                         <FolderKanbanIcon className="text-muted-foreground" />
                         <span className="flex-1 truncate">{project.name}</span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+                {results.habits.length > 0 && (
+                  <CommandGroup heading="Habits">
+                    {results.habits.map((habit) => (
+                      <CommandItem
+                        key={habit.id}
+                        value={`habit-${habit.id}`}
+                        onSelect={() => go(`/habits/${habit.id}`)}
+                      >
+                        <span
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: habit.color }}
+                        />
+                        <span className="flex-1 truncate">{habit.name}</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>

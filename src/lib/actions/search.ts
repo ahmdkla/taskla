@@ -15,9 +15,15 @@ export type SearchResults = {
   }[];
   projects: { id: string; name: string; status: string }[];
   notes: { id: string; title: string }[];
+  habits: { id: string; name: string; color: string }[];
 };
 
-const EMPTY: SearchResults = { tasks: [], projects: [], notes: [] };
+const EMPTY: SearchResults = {
+  tasks: [],
+  projects: [],
+  notes: [],
+  habits: [],
+};
 
 export async function searchAll(query: string): Promise<SearchResults> {
   const session = await verifySession();
@@ -26,7 +32,7 @@ export async function searchAll(query: string): Promise<SearchResults> {
   if (!validated.success) return EMPTY;
   const q = validated.data;
 
-  const [tasks, projects, notes] = await Promise.all([
+  const [tasks, projects, notes, habits] = await Promise.all([
     db.task.findMany({
       where: {
         userId: session.userId,
@@ -57,7 +63,17 @@ export async function searchAll(query: string): Promise<SearchResults> {
       orderBy: { updatedAt: "desc" },
       take: 8,
     }),
+    db.habit.findMany({
+      where: {
+        userId: session.userId,
+        archivedAt: null,
+        name: { contains: q, mode: "insensitive" },
+      },
+      select: { id: true, name: true, color: true },
+      orderBy: { createdAt: "asc" },
+      take: 8,
+    }),
   ]);
 
-  return { tasks, projects, notes };
+  return { tasks, projects, notes, habits };
 }

@@ -9,6 +9,7 @@ import {
   PlusIcon,
   TimerIcon,
   NotebookPenIcon,
+  FlameIcon,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/dal";
 import { db } from "@/lib/db";
@@ -21,6 +22,12 @@ import { MoodPicker } from "@/components/mood-picker";
 import { MiniCalendar } from "@/components/mini-calendar";
 import { TaskChecklistItem } from "@/components/task-checklist-item";
 import { QuickTaskDialog } from "@/components/quick-task-dialog";
+import {
+  HabitTodayItem,
+  type TodayHabit,
+} from "@/components/habit-today-item";
+import { computeProgress, toDayKey } from "@/lib/habits";
+import { todayKey } from "@/lib/day";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +94,29 @@ export default async function OverviewPage() {
       where: { userId_date: { userId: user.id, date: today } },
     }),
   ]);
+
+  const habitRecords = await db.habit.findMany({
+    where: { userId: user.id, archivedAt: null },
+    include: { entries: { select: { date: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const habitDayKey = todayKey();
+  const habits: TodayHabit[] = habitRecords.map((habit) => {
+    const progress = computeProgress(
+      habit.entries.map((e) => toDayKey(e.date)),
+      toDayKey(habit.startedOn),
+      habitDayKey
+    );
+    return {
+      id: habit.id,
+      name: habit.name,
+      color: habit.color,
+      doneToday: progress.doneToday,
+      currentStreak: progress.currentStreak,
+    };
+  });
+  const habitsDone = habits.filter((h) => h.doneToday).length;
 
   const countFor = (status: string) =>
     statusCounts.find((s) => s.status === status)?._count._all ?? 0;
@@ -232,6 +262,39 @@ export default async function OverviewPage() {
         <Card>
           <CardContent className="py-4">
             <MiniCalendar month={today} markedDates={markedDates} />
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-3">
+          <CardContent className="py-4">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="flex items-center gap-1.5 text-sm font-medium">
+                <FlameIcon className="size-4 text-warning" />
+                Today&apos;s habits
+                {habits.length > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {habitsDone}/{habits.length}
+                  </span>
+                )}
+              </h2>
+              <Link
+                href="/habits"
+                className="text-xs text-brand hover:underline"
+              >
+                {habits.length > 0 ? "View all" : "Start one"}
+              </Link>
+            </div>
+            {habits.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No habits yet — pick one small thing to do daily.
+              </p>
+            ) : (
+              <div className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
+                {habits.map((habit) => (
+                  <HabitTodayItem key={habit.id} habit={habit} />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

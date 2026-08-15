@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarIcon,
+  FlameIcon,
   FolderKanbanIcon,
   LayoutDashboardIcon,
   ListChecksIcon,
@@ -29,6 +30,7 @@ import { NavUser } from "@/components/nav-user";
 const navItems = [
   { title: "Overview", url: "/overview", icon: LayoutDashboardIcon },
   { title: "Tasks", url: "/tasks", icon: ListChecksIcon },
+  { title: "Habits", url: "/habits", icon: FlameIcon },
   { title: "Projects", url: "/projects", icon: FolderKanbanIcon },
   { title: "Schedule", url: "/schedule", icon: CalendarIcon },
   { title: "Focus", url: "/focus", icon: TimerIcon },

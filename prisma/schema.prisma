@@ -27,6 +27,7 @@ model User {
   focusSessions  FocusSession[]
   dailyLogs      DailyLog[]
   resetTokens    PasswordResetToken[]
+  habits         Habit[]
 }
 
 model PasswordResetToken {
@@ -52,6 +53,7 @@ model Category {
 
   projects Project[]
   tasks    Task[]
+  habits   Habit[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -168,6 +170,40 @@ model FocusSession {
 
   @@index([userId])
   @@index([taskId])
+}
+
+/// A habit is tracked as an append-only log of completed days (HabitEntry).
+/// Stage / streak / grace state is *derived* from that log rather than stored,
+/// so backfills and stage restarts can never leave counters out of sync.
+model Habit {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  name        String
+  why         String?
+  color       String    @default("#2563eb")
+  startedOn   DateTime  @db.Date
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  entries HabitEntry[]
+
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model HabitEntry {
+  id        String   @id @default(uuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([habitId])
 }
 
 enum Mood {
